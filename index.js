@@ -1,8 +1,8 @@
 const express = require('express');
-const app = express();
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
 require('dotenv').config();
+const app = express();
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7ks5x.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -26,12 +26,73 @@ async function run() {
         await client.connect();
 
         const userCollection = client.db("FundFlow_PDL").collection('users');
+        const campaignCollection = client.db("FundFlow_PDL").collection('campaigns');
+        const reviewsCollection = client.db("FundFlow_PDL").collection('reviews');
+        const donarInfoCollection = client.db("FundFlow_PDL").collection('donars');
+
+        // jwt related api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' });
+            res.send({ token });
+        })
+
+        // middleware verify token and verify admin
+        const verifyToken = (req, res, next) => {
+            if (!req.headers.Authorization) {
+                return res.status(401).send({ message: 'Unauthorized access' });
+            }
+            const token = req.headers.Authorization.split(' ')[1];
+            jwt.verify(token, process.env.ACCESS_TOKEN, (error, decoded) => {
+                if (error) {
+                    return res.status(401).send({ message: 'unauthorized access' });
+                }
+                req.decoded = decoded;
+                next();
+            })
+        }
+
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            const isAdmin = user?.role === 'admin';
+            if (!isAdmin) {
+                return res.status(403).send({ message: 'forbiden access' });
+            }
+            next();
+        }
 
         // user related apis 
         app.post('/users', async (req, res) => {
             const user = req.body;
-            console.log(user);
             const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
+
+        // campaigns related apis 
+        app.get('/campaigns', async (req, res) => {
+            const result = await campaignCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/campaigns/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await campaignCollection.findOne(query);
+            res.send(result);
+        })
+
+        // donar info ---- 
+        app.post('/donar-info', verifyToken, async (req, res) => {
+            const donar = req.body;
+            const result = await donarInfoCollection.insertOne(donar);
+            res.send(result);
+        })
+
+        // reviews related apis 
+        app.get('/reviews', async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
             res.send(result);
         })
 
