@@ -102,6 +102,12 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/campaigns', async (req, res) => {
+            const campaigns = req.body;
+            const result = await campaignCollection.insertOne(campaigns);
+            res.send(result);
+        })
+
         // app.get('/campaigns/:id', async (req, res) => {
         //     const id = req.params.id;
         //     const query = { _id: new ObjectId(id) };
