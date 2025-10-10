@@ -108,6 +108,31 @@ async function run() {
             res.send(result);
         })
 
+        app.delete('/campaigns/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await campaignCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        app.patch('/campaigns/:id', async (req, res) => {
+            const id = req.params.id;
+            const camp = req.body;
+            const query = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    title: camp.title,
+                    category: camp.category,
+                    description: camp.description,
+                    image: camp.image,
+                    location: camp.location,
+                    tags: camp.tags
+                }
+            }
+            const result = await campaignCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        })
+
         // app.get('/campaigns/:id', async (req, res) => {
         //     const id = req.params.id;
         //     const query = { _id: new ObjectId(id) };
