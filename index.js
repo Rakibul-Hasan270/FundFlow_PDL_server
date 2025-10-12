@@ -77,6 +77,20 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/users/admin/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbiden access' });
+            }
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let admin = false;
+            if (user) {
+                admin = user?.role === 'admin';
+            }
+            res.send({ admin });
+        })
+
         app.delete('/users/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -99,6 +113,13 @@ async function run() {
         // campaigns related apis 
         app.get('/campaigns', async (req, res) => {
             const result = await campaignCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.get('/campaigns/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await campaignCollection.findOne(query);
             res.send(result);
         })
 
@@ -132,13 +153,6 @@ async function run() {
             const result = await campaignCollection.updateOne(query, updatedDoc);
             res.send(result);
         })
-
-        // app.get('/campaigns/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const result = await campaignCollection.findOne(query);
-        //     res.send(result);
-        // })
 
         // donar info ---- 
         app.post('/donar-info', verifyToken, async (req, res) => {
