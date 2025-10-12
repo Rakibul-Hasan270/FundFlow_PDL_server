@@ -72,7 +72,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
@@ -91,14 +91,14 @@ async function run() {
             res.send({ admin });
         })
 
-        app.delete('/users/:id', async (req, res) => {
+        app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await userCollection.deleteOne(query);
             res.send(result);
         })
 
-        app.patch('/users/:id', async (req, res) => {
+        app.patch('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const updatedDoc = {
@@ -111,7 +111,7 @@ async function run() {
         })
 
         // campaigns related apis 
-        app.get('/campaigns', async (req, res) => {
+        app.get('/campaigns', async (req, res) => { 
             const result = await campaignCollection.find().toArray();
             res.send(result);
         })
@@ -123,20 +123,20 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/campaigns', async (req, res) => {
+        app.post('/campaigns', verifyToken, verifyAdmin, async (req, res) => {
             const campaigns = req.body;
             const result = await campaignCollection.insertOne(campaigns);
             res.send(result);
         })
 
-        app.delete('/campaigns/:id', async (req, res) => {
+        app.delete('/campaigns/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await campaignCollection.deleteOne(query);
             res.send(result);
         })
 
-        app.patch('/campaigns/:id', async (req, res) => {
+        app.patch('/campaigns/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const camp = req.body;
             const query = { _id: new ObjectId(id) };
@@ -161,7 +161,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/donar-info/:email', async (req, res) => {
+        app.get('/donar-info/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const result = await donarInfoCollection.find(query).toArray();
@@ -189,7 +189,7 @@ async function run() {
             }
         });
 
-        app.post('/payment', async (req, res) => {
+        app.post('/payment', verifyToken, async (req, res) => {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
 
@@ -200,7 +200,7 @@ async function run() {
             res.send({ insertResult, deleteResult });
         })
 
-        app.get('/payment/:email', async (req, res) => {
+        app.get('/payment/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const result = await paymentCollection.find(query).toArray();
@@ -214,7 +214,7 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/reviews', async (req, res) => {
+        app.post('/reviews', verifyToken, async (req, res) => {
             const review = req.body;
             const result = await reviewsCollection.insertOne(review);
             res.send(result);
@@ -229,9 +229,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('restaurant is open');
+    res.send('donation');
 })
 
 app.listen(port, () => {
-    console.log(`Zestora runing on port ${port}`);
+    console.log(`Donation runing on port ${port}`);
 })
